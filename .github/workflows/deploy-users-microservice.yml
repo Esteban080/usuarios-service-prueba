@@ -8,7 +8,7 @@ on:
 env:
   SERVICE_NAME: usuarios-service
   DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/usuarios-service
-  K8S_DIR: sistema-gestion-ordenes/backend/usuarios-service/kubernetes
+  K8S_DIR: kubernetes
 
 jobs:
   deploy:
@@ -26,8 +26,8 @@ jobs:
 
       - name: Build and test
         run: |
-          mvn clean package -f sistema-gestion-ordenes/backend/${{ env.SERVICE_NAME }}/pom.xml
-          mvn test -f sistema-gestion-ordenes/backend/${{ env.SERVICE_NAME }}/pom.xml
+          mvn clean package
+          mvn test
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -37,7 +37,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t ${{ env.DOCKER_IMAGE }}:latest sistema-gestion-ordenes/backend/${{ env.SERVICE_NAME }}
+          docker build -t ${{ env.DOCKER_IMAGE }}:latest .
           docker push ${{ env.DOCKER_IMAGE }}:latest
 
       - name: Install Minikube
@@ -57,7 +57,7 @@ jobs:
           # Configurar el entorno de Docker de Minikube
           eval $(minikube -p minikube docker-env)
           # Construir la imagen en el entorno de Minikube
-          docker build -t ${{ env.DOCKER_IMAGE }}:latest sistema-gestion-ordenes/backend/${{ env.SERVICE_NAME }}
+          docker build -t ${{ env.DOCKER_IMAGE }}:latest .
           # Reemplazar variables en los archivos de Kubernetes
           export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
           envsubst < ${{ env.K8S_DIR }}/deployment.yml > ${{ env.K8S_DIR }}/deployment-processed.yml
